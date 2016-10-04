@@ -44,7 +44,7 @@ public:
 		CreateReelMesh(reelMesh, 12);
 
 		reel = std::make_unique<Reel>(reelTexture, reelEffect, reelMesh);
-		reel->model = glm::scale(glm::mat4(), glm::vec3(2, 2, 2));
+		reel->model = glm::scale(glm::mat4(), glm::vec3(0.5f, 2, 2));
 
 		glEnable(GL_CULL_FACE);
 		glCullFace(GL_FRONT);
