@@ -1,6 +1,9 @@
 #include <iostream>
 #include <algorithm>
 #include <memory>
+#include <vector>
+#include <chrono>
+#include <random>
 
 #include "../common/sharedInclude.h"
 #include "../common/utils.h"
@@ -16,10 +19,11 @@ public:
 
 	Scene() 
 		: isLeftButtonPressed(false),
-		cameraPosition(0, 0, 5),
+		cameraPosition(0, 0, 7),
 		cameraRight(1, 0, 0),
 		cameraUp(0, 1, 0),
-		cameraLook(0, 0, -1)
+		cameraLook(0, 0, -1),
+		mt(std::random_device()())
 	{
 		UpdateCamera();
 	}
@@ -43,8 +47,14 @@ public:
 	
 		CreateReelMesh(reelMesh, 12);
 
-		reel = std::make_unique<Reel>(reelTexture, reelEffect, reelMesh);
-		reel->model = glm::scale(glm::mat4(), glm::vec3(0.5f, 2, 2));
+		for (int i = 0; i < 5; i++)
+		{
+			reels.push_back(std::make_unique<Reel>(reelTexture, reelEffect, reelMesh, 12));
+			auto reel = reels[i].get();
+			reel->model = glm::scale(glm::mat4(), glm::vec3(0.5f, 2.0f, 2.0f));
+			
+			reel->model = glm::translate(glm::mat4(), glm::vec3(i - 2.0f, 0, 0)) * reel->model;
+		}
 
 		glEnable(GL_CULL_FACE);
 		glCullFace(GL_FRONT);
@@ -62,24 +72,46 @@ public:
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 		glEnable(GL_DEPTH_TEST);
 
-		reel->Render(view, projection);
 
+		for (auto &reel : reels)
+		{
+			reel->Render(view, projection);
+		}
 
 		glutSwapBuffers();
 	}
 
+	void Update(float deltaMs)
+	{
+		for (auto &reel : reels)
+		{
+			reel->Update(deltaMs);
+		}
+	}
+
 	void OnKeyPress(unsigned char key, int x, int y)
 	{
-
+		if (key == ' ')
+		{
+			for (size_t i = 0; i < reels.size(); i++)
+			{
+				float j = static_cast<float>(i);
+				float mult = 0.3f;
+				auto dist = std::uniform_real_distribution<float>((j + 1) * mult, (j + 2) * mult);
+				reels[i]->Roll(dist(mt));
+			}
+		}
 	}
 
 	void OnMouseAction(int button, int state, int x, int y)
 	{
 		mousePosition = glm::vec2(x, y);
-		if (button == GLUT_LEFT_BUTTON) {
+		if (button == GLUT_LEFT_BUTTON)
+		{
 			isLeftButtonPressed = state == GLUT_DOWN;
 		}
-		else if (button == GLUT_RIGHT_BUTTON) {
+		else if (button == GLUT_RIGHT_BUTTON) 
+		{
 			isRightButtonPressed = state == GLUT_DOWN;
 		}
 		glutPostRedisplay();
@@ -87,8 +119,10 @@ public:
 		
 	void OnMouseMove(int isActive, int x, int y)
 	{
-		if (isActive) {
-			if (isLeftButtonPressed) {
+		if (isActive)
+		{
+			if (isLeftButtonPressed)
+			{
 				auto newMousePosition = glm::vec2(x, y);
 				auto diff = newMousePosition - mousePosition;
 				mousePosition = newMousePosition;
@@ -107,14 +141,14 @@ public:
 				UpdateCamera();
 				glutPostRedisplay();
 			}
-			else if (isRightButtonPressed) {
+			else if (isRightButtonPressed)
+			{
 				mousePosition = glm::vec2(x, y);
 				glutPostRedisplay();
 			}
 		}
 	}
-
-	
+		
 private:
 	
 	glm::mat4 view;
@@ -130,19 +164,39 @@ private:
 	Effect reelEffect;
 	Texture reelTexture;
 	Mesh reelMesh;
-	std::unique_ptr<Reel> reel;
+
+	std::vector<std::unique_ptr<Reel>> reels;
+
+	std::mt19937 mt;
 };
 
 
 Scene scene;
+std::chrono::time_point<std::chrono::steady_clock> start;
+const float MIN_UPDATE_PERIOD_MS = 1000.0f / 120;
+
+void UpdateLoop()
+{
+	auto current = std::chrono::steady_clock::now();
+	using float_ms = std::chrono::duration<float, std::milli>;
+	float elapsed = std::chrono::duration_cast<float_ms>(current - start).count();
+	if (elapsed > MIN_UPDATE_PERIOD_MS)
+	{
+		start = current;
+		scene.Update(elapsed);
+	}
+	glutPostRedisplay();
+}
 
 
 int main(int argc, char *argv[])
 {
-	glutInitWarningFunc([](const char *fmt, va_list ap) {
+	glutInitWarningFunc([](const char *fmt, va_list ap) 
+	{
 		std::cerr << "GLUT warning: " << VFormat(fmt, ap);
 	});
-	glutInitErrorFunc([](const char *fmt, va_list ap) {
+	glutInitErrorFunc([](const char *fmt, va_list ap) 
+	{
 		std::cerr << "GLUT error: " << VFormat(fmt, ap);
 	});
 
@@ -153,50 +207,68 @@ int main(int argc, char *argv[])
 	glutCreateWindow("Lab 2 -- OpenGL");
 
 	GLenum glewInitResult = glewInit();
-	if (glewInitResult != GLEW_OK) {
+	if (glewInitResult != GLEW_OK) 
+	{
 		std::cerr << "GLEW error: " << reinterpret_cast<const char *>(glewGetErrorString(glewInitResult));
 		return 1;
 	}
 
-	try {
+	try
+	{
 		scene.Init();
 	}
-	catch (ShaderLoadException &ex) {
+	catch (ShaderLoadException &ex) 
+	{
 		std::string message = ex.ShaderPath().length() > 0
 			? (ex.ShaderPath() + ": ") : "<in-memory shader>: ";
 		std::cerr << message << ex.what();
 		return 3;
 	}
-	catch (std::runtime_error &err) {
+	catch (std::runtime_error &err)
+	{
 		std::cerr << err.what();
 		return 4;
 	}
 
 
-	glutReshapeFunc([](int width, int height) {
+	glutReshapeFunc([](int width, int height)
+	{
 		glViewport(0, 0, width, height);
 		scene.UpdateProjection(width, height);
 	});
 
-	glutDisplayFunc([]() {
+	glutDisplayFunc([]() 
+	{
 		scene.Render();
 	});
-
-	glutKeyboardFunc([](unsigned char key, int x, int y) {
+		
+	glutKeyboardFunc([](unsigned char key, int x, int y) 
+	{
 		scene.OnKeyPress(key, x, y);
+		UpdateLoop();
 	});
 
-	glutMouseFunc([](int button, int state, int x, int y) {
+	glutMouseFunc([](int button, int state, int x, int y) 
+	{
 		scene.OnMouseAction(button, state, x, glutGet(GLUT_WINDOW_HEIGHT) - y);
+		UpdateLoop();
 	});
 
-	glutMotionFunc([](int x, int y) {
+	glutMotionFunc([](int x, int y)
+	{
 		scene.OnMouseMove(true, x, glutGet(GLUT_WINDOW_HEIGHT) - y);
+		UpdateLoop();
 	});
 
-	glutPassiveMotionFunc([](int x, int y) {
+	glutPassiveMotionFunc([](int x, int y)
+	{
 		scene.OnMouseMove(false, x, glutGet(GLUT_WINDOW_HEIGHT) - y);
+		UpdateLoop();
 	});
+
+	glutIdleFunc(UpdateLoop);
+	
+	start = std::chrono::steady_clock::now();
 
 	glutMainLoop();
 }
