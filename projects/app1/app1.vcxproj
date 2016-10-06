@@ -105,7 +105,9 @@
     </Link>
     <PostBuildEvent>
       <Command>copy /y "$(SolutionDir)lib\freeglut\bin\freeglut.dll" "$(OutDir)"
-copy /y "$(SolutionDir)lib\glew\bin\Release\Win32\glew32.dll" "$(OutDir)"</Command>
+copy /y "$(SolutionDir)lib\glew\bin\Release\Win32\glew32.dll" "$(OutDir)"
+xcopy /y /i "$(ProjectDir)textures" "$(OutDir)textures"
+xcopy /y /i "$(ProjectDir)shaders" "$(OutDir)shaders"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -139,7 +141,9 @@ copy /y "$(SolutionDir)lib\glew\bin\Release\Win32\glew32.dll" "$(OutDir)"</Comma
     </Link>
     <PostBuildEvent>
       <Command>copy /y "$(SolutionDir)lib\freeglut\bin\freeglut.dll" "$(OutDir)"
-copy /y "$(SolutionDir)lib\glew\bin\Release\Win32\glew32.dll" "$(OutDir)"</Command>
+copy /y "$(SolutionDir)lib\glew\bin\Release\Win32\glew32.dll" "$(OutDir)"
+xcopy /y /i "$(ProjectDir)textures" "$(OutDir)textures"
+xcopy /y /i "$(ProjectDir)shaders" "$(OutDir)shaders"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">

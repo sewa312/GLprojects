@@ -43,7 +43,7 @@ public:
 		reelEffect.Attach(vertex.CompileFile("shaders/reelVertex.glsl"))
 			.Attach(fragment.CompileFile("shaders/reelFragment.glsl")).Link();
 
-		reelTexture.LoadFromFile("textures/reel.tga", GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR_MIPMAP_LINEAR, GL_CLAMP_TO_EDGE);
+		reelTexture.LoadFromFile("textures/reel.tga", GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR_MIPMAP_LINEAR, GL_REPEAT);
 	
 		CreateReelMesh(reelMesh, 12);
 

@@ -10,6 +10,7 @@ Reel::Reel(Texture &texture, Effect &effect, Mesh &mesh, int faces)
 	viewUniform = effect.Uniform("View");
 	projectionUniform = effect.Uniform("Projection");
 	textureUniform = effect.Uniform("TextureUnit0");
+	velocityUniform = effect.Uniform("Velocity");
 	velocity = 0.0f;
 	angle = 0.0f;
 }
@@ -24,6 +25,7 @@ void Reel::Render(glm::mat4 &view, glm::mat4 &projection)
 	glUniformMatrix4fv(modelUniform, 1, false, glm::value_ptr(rotatedModel));
 	glUniformMatrix4fv(viewUniform, 1, false, glm::value_ptr(view));
 	glUniformMatrix4fv(projectionUniform, 1, false, glm::value_ptr(projection));
+	glUniform1f(velocityUniform, velocity);
 
 	glActiveTexture(GL_TEXTURE0);
 	texture.Bind();

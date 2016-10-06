@@ -25,6 +25,7 @@ private:
 	GLint viewUniform;
 	GLint projectionUniform;
 	GLint textureUniform;
+	GLint velocityUniform;
 
 	float velocity;
 	float angle;
