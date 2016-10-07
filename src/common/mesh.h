@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include <tuple>
 
 #include "sharedInclude.h"
 
@@ -15,3 +16,9 @@ public:
 private:
 
 };
+
+void CreateFrameMesh(Mesh &mesh);
+
+std::tuple<glm::vec3, glm::vec3> CalculateBBox(const Mesh &mesh);
+
+void CreateCube(Mesh &mesh);

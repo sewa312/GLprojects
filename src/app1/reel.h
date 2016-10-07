@@ -15,6 +15,8 @@ public:
 	void Roll(float velocity);
 	float RoundFace(float angle);
 	int FaceIndex(float angle);
+	void Stop();
+	bool IsStop();
 	glm::mat4 model;
 private:
 	Texture &texture;
@@ -30,6 +32,8 @@ private:
 	float velocity;
 	float angle;
 	int faces;
+	bool roll;
+	bool stop;
 };
 
 void CreateReelMesh(Mesh &mesh, int faces);

@@ -164,6 +164,7 @@ xcopy /y /i "$(ProjectDir)shaders" "$(OutDir)shaders"</Command>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\src\app1\frame.cpp" />
     <ClCompile Include="..\..\src\app1\main.cpp" />
     <ClCompile Include="..\..\src\app1\reel.cpp" />
     <ClCompile Include="..\..\src\common\effect.cpp" />
@@ -173,6 +174,7 @@ xcopy /y /i "$(ProjectDir)shaders" "$(OutDir)shaders"</Command>
     <ClCompile Include="..\..\src\common\utils.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\src\app1\frame.h" />
     <ClInclude Include="..\..\src\app1\reel.h" />
     <ClInclude Include="..\..\src\common\effect.h" />
     <ClInclude Include="..\..\src\common\mesh.h" />
@@ -183,6 +185,10 @@ xcopy /y /i "$(ProjectDir)shaders" "$(OutDir)shaders"</Command>
     <ClInclude Include="..\..\src\common\utils.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="shaders\frameFragment.glsl" />
+    <None Include="shaders\frameVertex.glsl" />
+    <None Include="shaders\glassFragment.glsl" />
+    <None Include="shaders\glassVertex.glsl" />
     <None Include="shaders\reelFragment.glsl" />
     <None Include="shaders\reelVertex.glsl" />
   </ItemGroup>

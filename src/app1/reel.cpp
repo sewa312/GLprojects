@@ -4,7 +4,9 @@ Reel::Reel(Texture &texture, Effect &effect, Mesh &mesh, int faces)
 	: texture(texture),
 	effect(effect),
 	mesh(mesh),
-	faces(faces)
+	faces(faces),
+	roll(false),
+	stop(true)
 {
 	modelUniform = effect.Uniform("Model");
 	viewUniform = effect.Uniform("View");
@@ -48,23 +50,24 @@ void Reel::Update(float ms)
 			angle += 2 * glm::pi<float>();
 		}
 
-		if (velocity < 0.01f) //velocity = 0.0f;
+		if (velocity < 0.005f && !roll) //velocity = 0.0f;
 		{
 
 			if (RoundFace(angle) < 0.02)
 			{
 				velocity = 0.0f;
+				stop = true;
 				float sectorAngle = 2 * glm::pi<float>() / faces;
 				angle = FaceIndex(angle) * sectorAngle;
 			}
 			else
 			{
-				velocity = 0.01f;
+				velocity = 0.004f;
 			}
 		}
 		else
 		{
-			velocity = velocity * 0.99f;
+			velocity = velocity * 0.98f;
 		}
 	}
 }
@@ -72,6 +75,8 @@ void Reel::Update(float ms)
 void Reel::Roll(float velocity)
 {
 	this->velocity = velocity;
+	roll = true;
+	stop = false;
 }
 
 float Reel::RoundFace(float angle)
@@ -86,4 +91,51 @@ int Reel::FaceIndex(float angle)
 	float sectorAngle = 2 * glm::pi<float>() / faces;
 	auto faceIndex = glm::round(angle / sectorAngle);
 	return static_cast<int>(faceIndex);
+}
+
+void Reel::Stop()
+{
+	roll = false;
+}
+
+bool Reel::IsStop()
+{
+	return stop;
+}
+
+void CreateReelMesh(Mesh &mesh, int faces)
+{
+	mesh.Vertices.push_back(glm::vec3(-1, 0, 0));
+	mesh.Vertices.push_back(glm::vec3(+1, 0, 0));
+
+	mesh.Normals.push_back(glm::vec3(-1, 0, 0));
+	mesh.Normals.push_back(glm::vec3(+1, 0, 0));
+
+	mesh.Coords.push_back(glm::vec2(0, 0));
+	mesh.Coords.push_back(glm::vec2(1, 0));
+
+	for (int i = 0; i < faces + 1; i++)
+	{
+		float angle = 2 * glm::pi<float>() * i / faces;
+		float y = glm::sin(angle);
+		float z = glm::cos(angle);
+		mesh.Vertices.push_back(glm::vec3(-1, y, z));
+		mesh.Vertices.push_back(glm::vec3(+1, y, z));
+
+		mesh.Normals.push_back(glm::vec3(0, y, z));
+		mesh.Normals.push_back(glm::vec3(0, y, z));
+
+		mesh.Coords.push_back(glm::vec2(0.10f, i * 1.0f / faces));
+		mesh.Coords.push_back(glm::vec2(0.95f, i * 1.0f / faces));
+
+		if (i < faces)
+		{
+			int j1 = i + 1;
+			int j2 = i + 2;
+			mesh.Triangles.push_back(glm::uvec3(0, 2 * j2, 2 * j1));
+			mesh.Triangles.push_back(glm::uvec3(1, 2 * j1 + 1, 2 * j2 + 1));
+			mesh.Triangles.push_back(glm::uvec3(2 * j1, 2 * j2, 2 * j2 + 1));
+			mesh.Triangles.push_back(glm::uvec3(2 * j2 + 1, 2 * j1 + 1, 2 * j1));
+		}
+	}
 }

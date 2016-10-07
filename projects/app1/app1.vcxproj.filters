@@ -36,6 +36,9 @@
     <ClCompile Include="..\..\src\common\mesh.cpp">
       <Filter>Файлы исходного кода</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\app1\frame.cpp">
+      <Filter>Файлы исходного кода</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\common\sharedInclude.h">
@@ -62,12 +65,27 @@
     <ClInclude Include="..\..\src\common\mesh.h">
       <Filter>Заголовочные файлы</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\app1\frame.h">
+      <Filter>Заголовочные файлы</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\reelVertex.glsl">
       <Filter>Файлы ресурсов</Filter>
     </None>
     <None Include="shaders\reelFragment.glsl">
+      <Filter>Файлы ресурсов</Filter>
+    </None>
+    <None Include="shaders\frameFragment.glsl">
+      <Filter>Файлы ресурсов</Filter>
+    </None>
+    <None Include="shaders\frameVertex.glsl">
+      <Filter>Файлы ресурсов</Filter>
+    </None>
+    <None Include="shaders\glassVertex.glsl">
+      <Filter>Файлы ресурсов</Filter>
+    </None>
+    <None Include="shaders\glassFragment.glsl">
       <Filter>Файлы ресурсов</Filter>
     </None>
   </ItemGroup>

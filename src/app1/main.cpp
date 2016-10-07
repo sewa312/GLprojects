@@ -12,6 +12,7 @@
 #include "../common/texture.h"
 
 #include "reel.h"
+#include "frame.h"
 
 class Scene
 {
@@ -46,7 +47,7 @@ public:
 		reelTexture.LoadFromFile("textures/reel.tga", GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR_MIPMAP_LINEAR, GL_REPEAT);
 	
 		CreateReelMesh(reelMesh, 12);
-
+		
 		for (int i = 0; i < 5; i++)
 		{
 			reels.push_back(std::make_unique<Reel>(reelTexture, reelEffect, reelMesh, 12));
@@ -55,6 +56,20 @@ public:
 			
 			reel->model = glm::translate(glm::mat4(), glm::vec3(i - 2.0f, 0, 0)) * reel->model;
 		}
+
+		Shader vertex2(GL_VERTEX_SHADER), fragment2(GL_FRAGMENT_SHADER);
+		frameEffect.Attach(vertex2.CompileFile("shaders/frameVertex.glsl"))
+			.Attach(fragment2.CompileFile("shaders/frameFragment.glsl")).Link();
+
+		Shader vertex3(GL_VERTEX_SHADER), fragment3(GL_FRAGMENT_SHADER);
+		glassEffect.Attach(vertex3.CompileFile("shaders/glassVertex.glsl"))
+			.Attach(fragment3.CompileFile("shaders/glassFragment.glsl")).Link();
+		
+		CreateFrameMesh(frameMesh);
+		CreateCube(glassMesh);
+		
+		frame = std::make_unique<Frame>(frameEffect, frameMesh, glassEffect, glassMesh);
+		frame->model = frame->model * glm::translate(glm::mat4(), glm::vec3(-0.0f, -0.0f, 2.4f));
 
 		glEnable(GL_CULL_FACE);
 		glCullFace(GL_FRONT);
@@ -78,6 +93,8 @@ public:
 			reel->Render(view, projection);
 		}
 
+		frame->Render(view, projection, cameraPosition);
+
 		glutSwapBuffers();
 	}
 
@@ -86,6 +103,15 @@ public:
 		for (auto &reel : reels)
 		{
 			reel->Update(deltaMs);
+		}
+
+		reels[0]->Stop();
+		for (size_t i = 1; i < reels.size(); i++)
+		{
+			if (reels[i - 1]->IsStop())
+			{
+				reels[i]->Stop();
+			}
 		}
 	}
 
@@ -96,8 +122,8 @@ public:
 			for (size_t i = 0; i < reels.size(); i++)
 			{
 				float j = static_cast<float>(i);
-				float mult = 0.3f;
-				auto dist = std::uniform_real_distribution<float>((j + 1) * mult, (j + 2) * mult);
+				float mult = 1.0f;
+				auto dist = std::uniform_real_distribution<float>((1) * mult, (1.2f) * mult);
 				reels[i]->Roll(dist(mt));
 			}
 		}
@@ -162,10 +188,15 @@ private:
 	glm::vec2 mousePosition;
 
 	Effect reelEffect;
+	Effect frameEffect;
+	Effect glassEffect;
 	Texture reelTexture;
 	Mesh reelMesh;
+	Mesh frameMesh;
+	Mesh glassMesh;
 
 	std::vector<std::unique_ptr<Reel>> reels;
+	std::unique_ptr<Frame> frame;
 
 	std::mt19937 mt;
 };
