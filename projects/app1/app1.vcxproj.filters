@@ -39,6 +39,9 @@
     <ClCompile Include="..\..\src\app1\frame.cpp">
       <Filter>Файлы исходного кода</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\app1\button.cpp">
+      <Filter>Файлы исходного кода</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\common\sharedInclude.h">
@@ -68,6 +71,9 @@
     <ClInclude Include="..\..\src\app1\frame.h">
       <Filter>Заголовочные файлы</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\app1\button.h">
+      <Filter>Заголовочные файлы</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\reelVertex.glsl">
@@ -86,6 +92,12 @@
       <Filter>Файлы ресурсов</Filter>
     </None>
     <None Include="shaders\glassFragment.glsl">
+      <Filter>Файлы ресурсов</Filter>
+    </None>
+    <None Include="shaders\buttonFragment.glsl">
+      <Filter>Файлы ресурсов</Filter>
+    </None>
+    <None Include="shaders\buttonVertex.glsl">
       <Filter>Файлы ресурсов</Filter>
     </None>
   </ItemGroup>

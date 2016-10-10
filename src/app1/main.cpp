@@ -4,6 +4,8 @@
 #include <vector>
 #include <chrono>
 #include <random>
+#include <string>
+#include <sstream>
 
 #include "../common/sharedInclude.h"
 #include "../common/utils.h"
@@ -13,6 +15,7 @@
 
 #include "reel.h"
 #include "frame.h"
+#include "button.h"
 
 class Scene
 {
@@ -24,6 +27,7 @@ public:
 		cameraRight(1, 0, 0),
 		cameraUp(0, 1, 0),
 		cameraLook(0, 0, -1),
+		absoluteTimeMs(0),
 		mt(std::random_device()())
 	{
 		UpdateCamera();
@@ -71,6 +75,18 @@ public:
 		frame = std::make_unique<Frame>(frameEffect, frameMesh, glassEffect, glassMesh);
 		frame->model = frame->model * glm::translate(glm::mat4(), glm::vec3(-0.0f, -0.0f, 2.4f));
 
+
+
+		Shader vertex4(GL_VERTEX_SHADER), fragment4(GL_FRAGMENT_SHADER);
+		buttonEffect.Attach(vertex4.CompileFile("shaders/buttonVertex.glsl"))
+			.Attach(fragment4.CompileFile("shaders/buttonFragment.glsl")).Link();
+		buttonTexture.LoadFromFile("textures/button.tga", GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR_MIPMAP_LINEAR, GL_REPEAT);
+		button = std::make_unique<Button>(buttonTexture, buttonEffect);
+		
+		UpdateUI();
+
+		last = std::chrono::system_clock::now();
+
 		glEnable(GL_CULL_FACE);
 		glCullFace(GL_FRONT);
 		glEnableClientState(GL_VERTEX_ATTRIB_ARRAY_POINTER);
@@ -80,6 +96,17 @@ public:
 	{
 		float aspectRatio = 1.0f * width / height;
 		projection = glm::perspective(45.0f, aspectRatio, 1.0f, 500.0f);
+		viewport = glm::vec2(width, height);
+		UpdateUI();
+	}
+
+	void UpdateUI()
+	{
+		if (button)
+		{
+			button->position = { 100, 100 };
+			button->size = { 100, 100 };
+		}
 	}
 
 	void Render()
@@ -95,11 +122,27 @@ public:
 
 		frame->Render(view, projection, cameraPosition);
 
+		button->Render(viewport, absoluteTimeMs);
+
+
+		glDisable(GL_DEPTH_TEST);
+		glUseProgram(0);
+		glRasterPos2f(0.65f, -0.65f);
+
+		CalculateFrameRate();
+		
+		std::ostringstream os;
+		os << "FPS: " << framesPerSecond;
+		std::string info = os.str();
+		glutBitmapString(GLUT_BITMAP_HELVETICA_18, reinterpret_cast<const unsigned char *>(info.c_str()));
+
 		glutSwapBuffers();
 	}
 
 	void Update(float deltaMs)
 	{
+		absoluteTimeMs += deltaMs;
+
 		for (auto &reel : reels)
 		{
 			reel->Update(deltaMs);
@@ -115,26 +158,36 @@ public:
 		}
 	}
 
+	void StartRoll()
+	{
+		for (size_t i = 0; i < reels.size(); i++)
+		{
+			float j = static_cast<float>(i);
+			float mult = 1.0f;
+			auto dist = std::uniform_real_distribution<float>((1) * mult, (1.2f) * mult);
+			reels[i]->Roll(dist(mt));
+		}
+	}
+
 	void OnKeyPress(unsigned char key, int x, int y)
 	{
 		if (key == ' ')
 		{
-			for (size_t i = 0; i < reels.size(); i++)
-			{
-				float j = static_cast<float>(i);
-				float mult = 1.0f;
-				auto dist = std::uniform_real_distribution<float>((1) * mult, (1.2f) * mult);
-				reels[i]->Roll(dist(mt));
-			}
+			StartRoll();
 		}
 	}
 
 	void OnMouseAction(int button, int state, int x, int y)
 	{
 		mousePosition = glm::vec2(x, y);
+
 		if (button == GLUT_LEFT_BUTTON)
 		{
 			isLeftButtonPressed = state == GLUT_DOWN;
+			if (this->button->ContainsPoint(mousePosition))
+			{
+				StartRoll();
+			}
 		}
 		else if (button == GLUT_RIGHT_BUTTON) 
 		{
@@ -147,7 +200,7 @@ public:
 	{
 		if (isActive)
 		{
-			if (isLeftButtonPressed)
+			if (isRightButtonPressed)
 			{
 				auto newMousePosition = glm::vec2(x, y);
 				auto diff = newMousePosition - mousePosition;
@@ -175,6 +228,23 @@ public:
 		}
 	}
 		
+	void CalculateFrameRate()
+	{
+		now = std::chrono::system_clock::now();
+
+		frameCount++;
+		
+		using float_ms = std::chrono::duration<float, std::milli>;
+		float elapsed = std::chrono::duration_cast<float_ms>(now - last).count();
+
+		if (elapsed > 1000.0f)
+		{
+			framesPerSecond = frameCount / (elapsed / 1000.0f);
+			frameCount = 0;
+			last = now;
+		}
+	}
+
 private:
 	
 	glm::mat4 view;
@@ -190,21 +260,35 @@ private:
 	Effect reelEffect;
 	Effect frameEffect;
 	Effect glassEffect;
+	Effect buttonEffect;
 	Texture reelTexture;
+	Texture buttonTexture;
 	Mesh reelMesh;
 	Mesh frameMesh;
 	Mesh glassMesh;
 
 	std::vector<std::unique_ptr<Reel>> reels;
 	std::unique_ptr<Frame> frame;
+	std::unique_ptr<Button> button;
 
 	std::mt19937 mt;
+
+	float framesPerSecond = 0.0f;   
+	float frameCount = 0.0f;
+	std::chrono::time_point<std::chrono::system_clock> now;
+	std::chrono::time_point<std::chrono::system_clock> last;
+
+	glm::vec2 viewport;
+
+	float absoluteTimeMs;
 };
 
 
 Scene scene;
 std::chrono::time_point<std::chrono::steady_clock> start;
 const float MIN_UPDATE_PERIOD_MS = 1000.0f / 120;
+
+
 
 void UpdateLoop()
 {
